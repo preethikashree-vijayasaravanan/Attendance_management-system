@@ -1,0 +1,180 @@
+/*.form-container {
+  width: 300px;
+  margin: 80px auto;
+  padding: 25px;
+  border-radius: 12px;
+  background-color: lavenderblush;
+  box-shadow: 0 0 15px pink;
+  text-align: center;
+}
+
+.form-container h2 {
+  margin-bottom: 20px;
+  color: palevioletred;
+}
+
+.form-container input {
+  width: 90%;
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid pink;
+  border-radius: 5px;
+}
+
+.form-container button {
+  background-color: hotpink;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  margin-top: 12px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.form-container button:hover {
+  background-color: deeppink;
+}
+
+.form-container p {
+  margin-top: 12px;
+}
+*/
+/* Auth.css - Global colorful baby pink theme */
+body {
+  background: linear-gradient(to bottom right, #ffe6f0, #fff0f5);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+h1, h2, h3 {
+  color: #d6336c;
+  text-align: center;
+}
+
+button {
+  background: linear-gradient(to right, #ff6f91, #ffb6c1);
+  color: white;
+  padding: 10px 18px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background: linear-gradient(to right, #ff5c8a, #ffa6bf);
+}
+
+input, select {
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 100%;
+  max-width: 300px;
+  box-shadow: 0 0 4px #ffd6e8;
+}
+
+.container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 30px auto;
+  background-color: #ffffffcc;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(255, 182, 193, 0.4);
+}
+
+label {
+  display: block;
+  margin-top: 10px;
+  font-weight: 500;
+  color: #c2185b;
+}
+
+p {
+  color: #b71c1c;
+}
+
+nav {
+  background-color: #ffc1e3;
+  padding: 25px;
+  text-align: center;
+  box-shadow: 0 2px 5px #ff99bb;
+}
+
+nav a {
+  color: #800040;
+  margin: 0 15px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+nav a:hover {
+  color: #cc005f;
+  text-decoration: underline;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background-color: #fff5f8;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+table th, table td {
+  border: 1px solid #f8c8dc;
+  padding: 10px;
+  text-align: center;
+}
+
+table th {
+  background-color: #ffdce6;
+  color: #c2185b;
+}
+
+table tr:nth-child(even) {
+  background-color: #fff0f5;
+}
+
+.message {
+  color: #d6336c;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+.notice-board {
+  background-color: #ffe6f0; /* Soft baby pink background */
+  border: 2px solid #ff99cc;
+  padding: 20px;
+  margin: 20px auto;
+  border-radius: 10px;
+  max-width: 600px;
+  box-shadow: 0 4px 10px rgba(255, 105, 180, 0.3);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.notice-board h2 {
+  color: #cc0066;
+  border-bottom: 2px solid #ff99cc;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.notice-board ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.notice-board li {
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #fff0f5;
+  border-left: 5px solid #ff66b2;
+  color: #660033;
+}
