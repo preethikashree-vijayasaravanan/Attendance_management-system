@@ -1,6 +1,10 @@
-// fixCreatedAt.js
+require('dotenv').config();
+
 const mongoose = require("mongoose");
-mongoose.connect("mongodb://localhost:27017/abccollege")
+
+const connString = process.env.MONGO_URI || "mongodb://localhost:27017/abccollege";
+
+mongoose.connect(connString)
   .then(async () => {
     const db = mongoose.connection.db;
     const usersCollection = db.collection("users");
@@ -12,13 +16,15 @@ mongoose.connect("mongodb://localhost:27017/abccollege")
       { name: "Swetha", date: "2025-06-20" },
       { name: "Vaishnavi", date: "2025-06-20" },
     ];
+    
     for (const { name, date } of updates) {
       const result = await usersCollection.updateOne(
         { name },
         { $set: { createdAt: new Date(date) } }
       );
-      console.log(`Updated ${name}`, result);
+      console.log(`Updated timestamp for ${name}`, result);
     }
+    
     mongoose.connection.close();
   })
-  .catch(err => console.error("Error:", err));
+  .catch(err => console.error("Error running fixCreatedAt script:", err));
