@@ -213,7 +213,7 @@ export default StaffDashboard;
 */
 
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 import {
   PieChart,
   Pie,
@@ -240,11 +240,12 @@ const StaffDashboard = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const today = getTodayString();
 
-  useEffect(() => {
+ useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/attendance/by-supervisor/${user.name}/date/${today}`
+        // 2. CHANGED: Switched to api.get and trimmed the localhost address string
+        const res = await api.get(
+          `/attendance/by-supervisor/${user.name}/date/${today}`
         );
         setStudents(res.data);
       } catch (err) {
@@ -254,10 +255,11 @@ const StaffDashboard = () => {
 
     const fetchCount = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/attendance/assigned-count/${user.name}`
+        // 3. CHANGED: Switched to api.get and trimmed the localhost address string
+        const res = await api.get(
+          `/attendance/assigned-count/${user.name}`
         );
-        setCount(res.data.count);
+        countSet(res.data.count);
       } catch (err) {
         console.error("Error fetching count", err);
       }

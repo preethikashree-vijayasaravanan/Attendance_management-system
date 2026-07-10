@@ -41,7 +41,7 @@ export default Profile;
 */
 // src/pages/Profile.js
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../api";
 import Navbar from "../components/Navbar";
 import "../pages/Auth.css"; // for pink theme
 
@@ -72,8 +72,8 @@ const Profile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.put(
-        `http://localhost:5000/api/auth/profile/${user._id}`,
+      const res = await api.put(
+        `/auth/profile/${user._id}`,
         formData,
         {
           headers: {

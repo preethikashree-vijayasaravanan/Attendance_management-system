@@ -115,7 +115,7 @@ export default StudentDashboard;
 */
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 import {
   PieChart,
   Pie,
@@ -133,8 +133,9 @@ const StudentDashboard = () => {
   const [records, setRecords] = useState([]);
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:5000/api/attendance/${user._id}`)
+    // 2. CHANGED: Switched to api.get and trimmed down the localhost string
+    api
+      .get(`/attendance/${user._id}`)
       .then((res) => setRecords(res.data))
       .catch((err) => console.log(err));
   }, [user._id]);

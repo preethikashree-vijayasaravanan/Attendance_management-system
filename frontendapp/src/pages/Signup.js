@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { useNavigate } from "react-router-dom";
 
 const Signup = () => {
@@ -32,7 +32,8 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/api/auth/signup", formData);
+      // 2. CHANGED: Switched to api.post and trimmed down the route string
+      await api.post("/auth/signup", formData);
       alert("Signup successful");
       navigate("/login");
     } catch (err) {
@@ -40,7 +41,7 @@ const Signup = () => {
       console.error(err);
     }
   };
-
+  
   return (
     <div className="container">
       <h2>Signup</h2>

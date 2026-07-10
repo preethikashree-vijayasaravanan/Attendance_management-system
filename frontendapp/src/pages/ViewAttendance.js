@@ -316,7 +316,7 @@ const ViewAttendance = () => {
 export default ViewAttendance;
 */
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 
 const ViewAttendance = () => {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -327,7 +327,8 @@ const ViewAttendance = () => {
   const fetchAttendance = async (date) => {
     setLoading(true);
     try {
-      const res = await axios.get(`http://localhost:5000/api/attendance/by-supervisor/${user.name}/date/${date}`);
+      // 2. CHANGED: Switched to api.get and stripped out the localhost address string
+      const res = await api.get(`/attendance/by-supervisor/${user.name}/date/${date}`);
       setAttendance(res.data);
     } catch (err) {
       console.error("Error fetching attendance:", err);
@@ -335,7 +336,7 @@ const ViewAttendance = () => {
     }
     setLoading(false);
   };
-
+  
   useEffect(() => {
     fetchAttendance(selectedDate);
   }, [selectedDate]);
