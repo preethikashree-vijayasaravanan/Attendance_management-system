@@ -1,32 +1,31 @@
 import React, { useEffect, useState } from "react";
 import api from "../api";
-import Navbar from "../components/Navbar"; // 1. Imported Navbar to allow navigation
+import Navbar from "../components/Navbar"; 
 
 const ViewAttendance = () => {
-  // SAFE CHANGE: Handle unauthenticated or empty local storage states safely
-  const user = JSON.parse(localStorage.getItem("user")) || { name: "" };
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchAttendance = async (date) => {
-    // Only fire if user context metadata is available
-    if (!user.name) return;
-    
-    setLoading(true);
-    try {
-      const res = await api.get(`/attendance/by-supervisor/${user.name}/date/${date}`);
-      setAttendance(res.data);
-    } catch (err) {
-      console.error("Error fetching attendance:", err);
-      setAttendance([]);
-    }
-    setLoading(false);
-  };
-  
   useEffect(() => {
-    fetchAttendance(selectedDate);
-  }, [selectedDate]);
+    // FIX 1: Safely load user identity data inside the hook to isolate the component execution state
+    const savedUser = JSON.parse(localStorage.getItem("user"));
+    if (!savedUser || !savedUser.name) return;
+
+    const fetchAttendance = async () => {
+      setLoading(true);
+      try {
+        const res = await api.get(`/attendance/by-supervisor/${savedUser.name}/date/${selectedDate}`);
+        setAttendance(res.data);
+      } catch (err) {
+        console.error("Error fetching attendance:", err);
+        setAttendance([]);
+      }
+      setLoading(false);
+    };
+
+    fetchAttendance();
+  }, [selectedDate]); // Fires strictly when a staff member changes the calendar date dropdown input picker
 
   const handleDateChange = (e) => {
     setSelectedDate(e.target.value);
@@ -34,7 +33,6 @@ const ViewAttendance = () => {
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#ffe6f0" }}>
-      {/* 2. Render Navbar at the top of the container layout */}
       <Navbar />
 
       <div style={{ padding: "20px" }}>
@@ -55,7 +53,6 @@ const ViewAttendance = () => {
           />
         </div>
 
-        {/* Show total assigned student count */}
         {attendance.length > 0 && (
           <div style={{ marginBottom: "15px", textAlign: "center", fontWeight: "bold", color: "#800040" }}>
             Total Assigned Students: {attendance.length}
@@ -83,9 +80,9 @@ const ViewAttendance = () => {
                 attendance.map((record, idx) => (
                   <tr key={idx}>
                     <td style={tableCellStyle}>{record.name}</td>
-                    <td style={tableCellStyle}>
+                    <td style={{ ...tableCellStyle, fontWeight: "bold" }}>
                       {record.status === "Not enrolled yet" ? (
-                        <span style={{ color: "gray", fontStyle: "italic" }}>{record.status}</span>
+                        <span style={{ color: "gray", fontStyle: "italic", fontWeight: "normal" }}>{record.status}</span>
                       ) : record.status === "Absent" ? (
                         <span style={{ color: "red" }}>{record.status}</span>
                       ) : (

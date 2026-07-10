@@ -18,24 +18,24 @@ const getTodayString = () => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
-const COLORS = ["#00C49F", "#FF8042", "#8884d8"]; // Present, Absent, Not enrolled
+// Present, Absent, Half Day
+const COLORS = ["#00C49F", "#FF8042", "#8884d8"]; 
 
 const StaffDashboard = () => {
   const [students, setStudents] = useState([]);
   const [count, setCount] = useState(0);
   
-  // SAFE CHANGE: Parse with a safe fallback object to avoid runtime crashes
-  const user = JSON.parse(localStorage.getItem("user")) || { name: "" };
   const today = getTodayString();
 
   useEffect(() => {
-    // Only fire network requests if a user session exists
-    if (!user.name) return;
+    // FIX 1: Safely read from localStorage directly inside the effect to prevent infinite rendering loops
+    const savedUser = JSON.parse(localStorage.getItem("user"));
+    if (!savedUser || !savedUser.name) return;
 
     const fetchAttendance = async () => {
       try {
         const res = await api.get(
-          `/attendance/by-supervisor/${user.name}/date/${today}`
+          `/attendance/by-supervisor/${savedUser.name}/date/${today}`
         );
         setStudents(res.data);
       } catch (err) {
@@ -46,7 +46,7 @@ const StaffDashboard = () => {
     const fetchCount = async () => {
       try {
         const res = await api.get(
-          `/attendance/assigned-count/${user.name}`
+          `/attendance/assigned-count/${savedUser.name}`
         );
         setCount(res.data.count); 
       } catch (err) {
@@ -56,7 +56,7 @@ const StaffDashboard = () => {
 
     fetchAttendance();
     fetchCount();
-  }, [user.name, today]);
+  }, [today]); // Only depend on today changing
 
   // Pie chart data
   const pieData = [
@@ -91,7 +91,7 @@ const StaffDashboard = () => {
               label
             >
               {pieData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index]} />
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
             <Tooltip />
@@ -115,7 +115,10 @@ const StaffDashboard = () => {
             {students.map((s, index) => (
               <tr key={index}>
                 <td>{s.name}</td>
-                <td style={{ color: s.status === "Present" ? "green" : s.status === "Absent" ? "red" : "gray" }}>
+                <td style={{ 
+                  color: s.status === "Present" ? "green" : s.status === "Absent" ? "red" : "#8884d8", 
+                  fontWeight: "bold" 
+                }}>
                   {s.status}
                 </td>
               </tr>

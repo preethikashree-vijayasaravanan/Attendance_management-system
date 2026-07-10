@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import api from "../api";
+import api from "../api"; // Pointing to your production Render base URL
 import { useNavigate } from "react-router-dom";
 
 const Signup = () => {
@@ -10,6 +10,7 @@ const Signup = () => {
     department: "",
     role: "student", // Default role
   });
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
 
@@ -31,13 +32,18 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(""); // Clear previous errors
+    
     try {
-      // FIX: Changed from "/auth/signup" to "/auth/register" to match backend/routes/auth.js
-      await api.post("/auth/register", formData);
+      // FIX 1: Changed from "/auth/register" to "/auth/signup" to match backend/routes/auth.js
+      await api.post("/auth/signup", formData);
       alert("Signup successful! Redirecting to login...");
       navigate("/login");
     } catch (err) {
-      alert(err.response?.data?.error || "Signup failed. Please try again.");
+      // FIX 2: Your backend returns a .json({ message: "..." }), not .error
+      const errorMsg = err.response?.data?.message || "Signup failed. Please try again.";
+      setError(errorMsg);
+      alert(errorMsg);
       console.error(err);
     }
   };
@@ -45,6 +51,7 @@ const Signup = () => {
   return (
     <div className="container">
       <h2>Signup</h2>
+      {error && <p style={{ color: "red", fontWeight: "bold" }}>{error}</p>}
       <form onSubmit={handleSubmit}>
         <div>
           <label>Name:</label><br />
@@ -107,7 +114,7 @@ const Signup = () => {
           </button>
         </div>
 
-        <button type="submit" style={{ padding: "10px 15px" }}>Signup</button>
+        <button type="submit" style={{ padding: "10px 15px", marginTop: "10px" }}>Signup</button>
       </form>
     </div>
   );

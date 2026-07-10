@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import api from "../api"; // Imports your production Render base URL
+import api from "../api";
 import { useNavigate } from "react-router-dom";
-import './Auth.css';
+import "./Auth.css";
 
-const Signup = () => {
-  const [formData, setFormData] = useState({ name: "", email: "", password: "", department: "", role: "student" });
+const Login = () => {
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -14,25 +14,32 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
     try {
-      // Pointing cleanly to production Render /api/auth/register
-      await api.post("/auth/register", formData); 
-      alert("Registration successful! Please log in.");
-      navigate("/login");
+      const res = await api.post("/auth/login", formData);
+      
+      // Save user session details locally
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      
+      alert("Login successful!");
+      
+      // Redirect based on role
+      if (res.data.user.role === "staff") {
+        navigate("/staff-dashboard");
+      } else {
+        navigate("/dashboard"); // Student dashboard
+      }
     } catch (err) {
-      setError(err.response?.data?.error || "Signup failed");
+      setError(err.response?.data?.message || "Invalid credentials");
     }
   };
 
   return (
     <div className="container">
-      <h2>Signup</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      <h2>Login</h2>
+      {error && <p style={{ color: "red", fontWeight: "bold" }}>{error}</p>}
       <form onSubmit={handleSubmit}>
-        <div>
-          <label>Name:</label><br />
-          <input type="text" name="name" value={formData.name} onChange={handleChange} required />
-        </div>
         <div>
           <label>Email:</label><br />
           <input type="email" name="email" value={formData.email} onChange={handleChange} required />
@@ -41,21 +48,10 @@ const Signup = () => {
           <label>Password:</label><br />
           <input type="password" name="password" value={formData.password} onChange={handleChange} required />
         </div>
-        <div>
-          <label>Department:</label><br />
-          <input type="text" name="department" value={formData.department} onChange={handleChange} required />
-        </div>
-        <div>
-          <label>Role:</label><br />
-          <select name="role" value={formData.role} onChange={handleChange}>
-            <option value="student">Student</option>
-            <option value="staff">Staff</option>
-          </select>
-        </div>
-        <button type="submit" style={{ marginTop: "10px" }}>Signup</button>
+        <button type="submit" style={{ marginTop: "10px" }}>Login</button>
       </form>
     </div>
   );
 };
 
-export default Signup;
+export default Login;

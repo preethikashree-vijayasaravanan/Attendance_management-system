@@ -1,12 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import api from "../api"; // 1. Switched to centralized production API wrapper
-import Navbar from "../components/Navbar"; // 2. Imported Navbar for layout consistency
-import "./Auth.css"; // Optional: styling matching your theme
+import api from "../api"; // 1. Centralized production API wrapper
+import Navbar from "../components/Navbar"; // 2. Navbar for layout consistency
+import "./Auth.css"; 
 
 const AttendancePage = () => {
-  // SAFE CHANGE: Handle empty or unauthenticated local storage sessions safely
-  const user = JSON.parse(localStorage.getItem("user")) || { _id: "", name: "" };
-  
   const [status, setStatus] = useState("Present");
   const [location, setLocation] = useState({ lat: null, lng: null });
   const [records, setRecords] = useState([]);
@@ -29,35 +26,39 @@ const AttendancePage = () => {
     );
   };
 
-  // 3. FIX COMPILER WARNING: Wrapped inside useCallback to fix the dependency array issues
+  // FIX 1: Move user ID extraction directly inside the fetch function to stop loop cycles completely
   const fetchAttendance = useCallback(async () => {
-    if (!user._id) return;
+    const savedUser = JSON.parse(localStorage.getItem("user"));
+    if (!savedUser || !savedUser._id) return;
+
     try {
-      const res = await api.get(`/attendance/${user._id}`);
+      const res = await api.get(`/attendance/${savedUser._id}`);
       setRecords(res.data);
     } catch (err) {
       console.error("Error loading attendance records:", err);
     }
-  }, [user._id]);
+  }, []); // Empty array because it loads safely inside from localStorage dynamically
 
   // Submit attendance records
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user._id) {
+    
+    const savedUser = JSON.parse(localStorage.getItem("user"));
+    if (!savedUser || !savedUser._id) {
       alert("User profile session data missing.");
       return;
     }
 
     try {
       const payload = {
-        userId: user._id,
+        userId: savedUser._id,
         status,
         location,
       };
 
       await api.post("/attendance", payload);
       alert("Attendance marked successfully");
-      fetchAttendance();
+      fetchAttendance(); // Reload the history log list automatically
     } catch (err) {
       const msg = err?.response?.data?.message || "Failed to mark attendance";
       alert(msg);
@@ -83,7 +84,7 @@ const AttendancePage = () => {
           </select>
           <br />
 
-          <button type="button" onClick={getLocation} style={{ marginRight: "10px", padding: "8px 12px" }}>
+          <button type="button" onClick={getLocation} style={{ marginRight: "10px", padding: "8px 12px", marginTop: "10px" }}>
             Get Location
           </button>
 
@@ -94,7 +95,7 @@ const AttendancePage = () => {
             </div>
           )}
 
-          <button type="submit" style={{ padding: "8px 15px", backgroundColor: "#800040", color: "#fff", border: "none", borderRadius: "4px" }}>
+          <button type="submit" style={{ padding: "8px 15px", backgroundColor: "#800040", color: "#fff", border: "none", borderRadius: "4px", display: "block", marginTop: "15px" }}>
             Mark Attendance
           </button>
         </form>
@@ -102,13 +103,13 @@ const AttendancePage = () => {
         <hr style={{ margin: "30px 0", border: "0", borderTop: "1px solid #ffb3c6" }} />
 
         <h3>Your Attendance Records</h3>
-        <table border="1" style={{ width: "100%", borderCollapse: "collapse", backgroundColor: "#fff0f5" }}>
+        <table border="1" cellPadding="10" style={{ width: "100%", borderCollapse: "collapse", backgroundColor: "#fff0f5" }}>
           <thead>
             <tr style={{ backgroundColor: "#ffb3c6", color: "#800040" }}>
-              <th style={{ padding: "10px" }}>Date</th>
-              <th style={{ padding: "10px" }}>Status</th>
-              <th style={{ padding: "10px" }}>Latitude</th>
-              <th style={{ padding: "10px" }}>Longitude</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
             </tr>
           </thead>
           <tbody>
@@ -121,12 +122,12 @@ const AttendancePage = () => {
             ) : (
               records.map((r, idx) => (
                 <tr key={idx} style={{ textAlign: "center" }}>
-                  <td style={{ padding: "10px" }}>{r.date}</td>
-                  <td style={{ padding: "10px", color: r.status === "Present" ? "green" : "red", fontWeight: "bold" }}>
+                  <td>{r.date}</td>
+                  <td style={{ color: r.status === "Present" ? "green" : r.status === "Absent" ? "red" : "#8884d8", fontWeight: "bold" }}>
                     {r.status}
                   </td>
-                  <td style={{ padding: "10px" }}>{r.location?.lat || "–"}</td>
-                  <td style={{ padding: "10px" }}>{r.location?.lng || "–"}</td>
+                  <td>{r.location?.lat ?? "–"}</td>
+                  <td>{r.location?.lng ?? "–"}</td>
                 </tr>
               ))
             )}

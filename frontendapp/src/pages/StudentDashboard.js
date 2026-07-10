@@ -12,19 +12,21 @@ import {
 const COLORS = ["#00C49F", "#FF8042"]; // Present, Absent
 
 const StudentDashboard = () => {
-  // SAFE CHANGE: Handle unauthenticated or empty local storage states safely
-  const user = JSON.parse(localStorage.getItem("user")) || { _id: "", name: "" };
   const [records, setRecords] = useState([]);
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
-    // Only fetch data if the user context is safely available
-    if (!user._id) return;
+    // FIX 1: Read safely inside the useEffect hook to prevent endless rendering loops
+    const savedUser = JSON.parse(localStorage.getItem("user"));
+    if (!savedUser || !savedUser._id) return;
+
+    setUserName(savedUser.name || "");
 
     api
-      .get(`/attendance/${user._id}`)
+      .get(`/attendance/${savedUser._id}`)
       .then((res) => setRecords(res.data))
-      .catch((err) => console.log(err));
-  }, [user._id]);
+      .catch((err) => console.error("Error fetching student records:", err));
+  }, []); // Empty dependency array means this runs exactly ONCE when the page mounts
 
   const total = records.length;
   const present = records.filter(
@@ -40,7 +42,7 @@ const StudentDashboard = () => {
 
   return (
     <div className="container">
-      <h2>{user.name ? `${user.name} - Student Dashboard` : "Student Dashboard"}</h2>
+      <h2>{userName ? `${userName} - Student Dashboard` : "Student Dashboard"}</h2>
 
       <h3>📊 Attendance Summary</h3>
       <p>Total Days: {total}</p>
@@ -70,7 +72,7 @@ const StudentDashboard = () => {
       )}
 
       <h3>📅 Attendance Records</h3>
-      <table border="1" style={{ width: "100%", marginTop: "15px" }}>
+      <table border="1" cellPadding="10" style={{ width: "100%", marginTop: "15px", backgroundColor: "#fff" }}>
         <thead style={{ backgroundColor: "#ffe0f0" }}>
           <tr>
             <th>Date</th>
@@ -90,11 +92,12 @@ const StudentDashboard = () => {
             records.map((rec, i) => (
               <tr key={i}>
                 <td>{rec.date}</td>
-                <td style={{ color: rec.status === "Present" ? "green" : "red" }}>
+                <td style={{ color: rec.status === "Present" || rec.status === "Full Day" ? "green" : "red", fontWeight: "bold" }}>
                   {rec.status}
                 </td>
-                <td>{rec.location?.lat || "–"}</td>
-                <td>{rec.location?.lng || "–"}</td>
+                {/* FIX 2: Added optional chaining fallback protections for location coordinates */}
+                <td>{rec.location?.lat ?? "–"}</td>
+                <td>{rec.location?.lng ?? "–"}</td>
               </tr>
             ))
           )}
