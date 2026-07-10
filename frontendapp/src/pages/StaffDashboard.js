@@ -1,217 +1,3 @@
-/*
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
-
-const StaffDashboard = () => {
-  const navigate = useNavigate();
-
-  return (
-    <div>
-      <Navbar />
-      <div style={{ padding: "20px" }}>
-        <h2>Welcome Staff</h2>
-        <button onClick={() => navigate("/verify-attendance")}>View Student Attendance</button>
-      </div>
-    </div>
-  );
-};
-
-export default StaffDashboard;
-*/
-/*import React, { useEffect, useState } from "react";
-import axios from "axios";
-
-const StaffDashboard = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
-  const [attendance, setAttendance] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const today = new Date().toISOString().split("T")[0];
-    return today;
-  });
-
-  const fetchAttendance = (date) => {
-    axios
-      .get(`http://localhost:5000/api/attendance/by-supervisor/${user.name}/date/${date}`)
-      .then((res) => setAttendance(res.data))
-      .catch((err) => alert("Error loading attendance"));
-  };
-
-  useEffect(() => {
-    fetchAttendance(selectedDate);
-  }, [selectedDate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    window.location.href = "/";
-  };
-
-  return (
-    <div className="container">
-      <h2>Welcome, {user.name} (Staff)</h2>
-      <button onClick={handleLogout}>Logout</button>
-
-      <h3>Student Attendance View</h3>
-
-      <label>
-        Select Date:{" "}
-        <input
-          type="date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-        />
-      </label>
-
-      <table border="1" style={{ marginTop: "20px" }}>
-        <thead>
-          <tr>
-            <th>Student</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {attendance.map((a, index) => (
-            <tr key={index}>
-              <td>{a.name}</td>
-              <td>{a.status}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
-
-export default StaffDashboard;
-*/
-/*
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import "./Auth.css";
-
-const StaffDashboard = () => {
-  const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user"));
-
-  return (
-    <div className="container">
-      <nav >
-        <button onClick={() => navigate("/staff-dashboard")}>Dashboard</button>
-        <button onClick={() => navigate("/view-attendance")}>View Attendance</button>
-        <button onClick={() => navigate("/profile")}>Profile</button>
-        <button
-          onClick={() => {
-            localStorage.clear();
-            navigate("/login");
-          }}
-        >
-          Logout
-        </button>
-      </nav>
-
-      <h2>Welcome, {user.name}</h2>
-      <p>You are assigned to monitor student attendance.</p>
-    </div>
-  );
-};
-
-export default StaffDashboard;
-*/
-/*
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import "./Auth.css";
-
-const StaffDashboard = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
-  const [studentCount, setStudentCount] = useState(0);
-
-  useEffect(() => {
-    const fetchAssignedStudents = async () => {
-      try {
-        const res = await axios.get(`http://localhost:5000/api/staff/students/${user._id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-        setStudentCount(res.data.length);
-      } catch (err) {
-        console.error("Failed to load students", err);
-      }
-    };
-
-    fetchAssignedStudents();
-  }, [user._id]);
-
-  return (
-    <div className="container">
-      <h2>Welcome, {user.name}</h2>
-      <p><strong>You are assigned to monitor student attendance.</strong></p>
-      <p><strong>Number of assigned students:</strong> {studentCount}</p>
-    </div>
-  );
-};
-
-export default StaffDashboard;
-*/
-/*
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import "./Auth.css";
-const getTodayString = () => {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-};
-
-const StaffDashboard = () => {
-  const [students, setStudents] = useState([]);
-  const [count, setCount] = useState(0);
-
-  const user = JSON.parse(localStorage.getItem("user"));
-  const today = getTodayString();
-
-  useEffect(() => {
-    const fetchAttendance = async () => {
-      try {
-        const res = await axios.get(
-          `http://localhost:5000/api/attendance/by-supervisor/${user.name}/date/${today}`
-        );
-        setStudents(res.data);
-      } catch (err) {
-        console.error("Error fetching attendance", err);
-      }
-    };
-
-    const fetchCount = async () => {
-      try {
-        const res = await axios.get(
-          `http://localhost:5000/api/attendance/assigned-count/${user.name}`
-        );
-        setCount(res.data.count);
-      } catch (err) {
-        console.error("Error fetching count", err);
-      }
-    };
-
-    fetchAttendance();
-    fetchCount();
-  }, [user.name, today]);
-
-  return (
-    <div className="container" >
-      <h2>Staff Dashboard</h2>
-      <p>Number of assigned students: {count}</p>
-    
-    </div>
-  );
-};
-
-export default StaffDashboard;
-*/
-
 import React, { useEffect, useState } from "react";
 import api from "../api";
 import {
@@ -236,14 +22,13 @@ const COLORS = ["#00C49F", "#FF8042", "#8884d8"]; // Present, Absent, Not enroll
 
 const StaffDashboard = () => {
   const [students, setStudents] = useState([]);
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(0); // This is where 'setCount' is defined
   const user = JSON.parse(localStorage.getItem("user"));
   const today = getTodayString();
 
- useEffect(() => {
+  useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        // 2. CHANGED: Switched to api.get and trimmed the localhost address string
         const res = await api.get(
           `/attendance/by-supervisor/${user.name}/date/${today}`
         );
@@ -255,11 +40,11 @@ const StaffDashboard = () => {
 
     const fetchCount = async () => {
       try {
-        // 3. CHANGED: Switched to api.get and trimmed the localhost address string
         const res = await api.get(
           `/attendance/assigned-count/${user.name}`
         );
-        countSet(res.data.count);
+        // CHANGED: Fixed typo from countSet to setCount
+        setCount(res.data.count); 
       } catch (err) {
         console.error("Error fetching count", err);
       }
