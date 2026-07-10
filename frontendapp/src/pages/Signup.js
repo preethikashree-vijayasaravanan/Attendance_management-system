@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
@@ -22,22 +21,23 @@ const Signup = () => {
     }));
   };
 
-  const setAsStaff = () => {
+  // Toggle function so a user can choose Staff or switch back to Student
+  const toggleRole = () => {
     setFormData((prev) => ({
       ...prev,
-      role: "staff",
+      role: prev.role === "student" ? "staff" : "student",
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // 2. CHANGED: Switched to api.post and trimmed down the route string
-      await api.post("/auth/signup", formData);
-      alert("Signup successful");
+      // FIX: Changed from "/auth/signup" to "/auth/register" to match backend/routes/auth.js
+      await api.post("/auth/register", formData);
+      alert("Signup successful! Redirecting to login...");
       navigate("/login");
     } catch (err) {
-      alert("Signup failed");
+      alert(err.response?.data?.error || "Signup failed. Please try again.");
       console.error(err);
     }
   };
@@ -94,7 +94,7 @@ const Signup = () => {
           </p>
           <button
             type="button"
-            onClick={setAsStaff}
+            onClick={toggleRole}
             style={{
               backgroundColor: formData.role === "staff" ? "#4caf50" : "#007bff",
               color: "#fff",
@@ -103,7 +103,7 @@ const Signup = () => {
               cursor: "pointer",
             }}
           >
-            I am Staff
+            {formData.role === "staff" ? "Change to Student" : "I am Staff"}
           </button>
         </div>
 
@@ -114,4 +114,3 @@ const Signup = () => {
 };
 
 export default Signup;
-

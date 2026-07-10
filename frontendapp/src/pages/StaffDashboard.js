@@ -22,11 +22,16 @@ const COLORS = ["#00C49F", "#FF8042", "#8884d8"]; // Present, Absent, Not enroll
 
 const StaffDashboard = () => {
   const [students, setStudents] = useState([]);
-  const [count, setCount] = useState(0); // This is where 'setCount' is defined
-  const user = JSON.parse(localStorage.getItem("user"));
+  const [count, setCount] = useState(0);
+  
+  // SAFE CHANGE: Parse with a safe fallback object to avoid runtime crashes
+  const user = JSON.parse(localStorage.getItem("user")) || { name: "" };
   const today = getTodayString();
 
   useEffect(() => {
+    // Only fire network requests if a user session exists
+    if (!user.name) return;
+
     const fetchAttendance = async () => {
       try {
         const res = await api.get(
@@ -43,7 +48,6 @@ const StaffDashboard = () => {
         const res = await api.get(
           `/attendance/assigned-count/${user.name}`
         );
-        // CHANGED: Fixed typo from countSet to setCount
         setCount(res.data.count); 
       } catch (err) {
         console.error("Error fetching count", err);

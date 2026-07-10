@@ -1,167 +1,20 @@
-/*
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import Navbar from "../components/Navbar";
+import React, { useState, useEffect, useCallback } from "react";
+import api from "../api"; // 1. Switched to centralized production API wrapper
+import Navbar from "../components/Navbar"; // 2. Imported Navbar for layout consistency
+import "./Auth.css"; // Optional: styling matching your theme
 
 const AttendancePage = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
-  const [status, setStatus] = useState("Present");
-  const [records, setRecords] = useState([]);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const loadRecords = async () => {
-    try {
-      const res = await axios.get(`http://localhost:5000/api/attendance/${user._id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      setRecords(res.data);
-    } catch (err) {
-      console.error("Failed to load records:", err);
-    }
-  };
-
-  useEffect(() => {
-    loadRecords();
-  }, []);
-
-  const hasMarkedToday = () => {
-    const today = new Date().toDateString();
-    return records.some((rec) => new Date(rec.date).toDateString() === today);
-  };
-
-  const markAttendance = async () => {
-    setErrorMessage("");
-    setSuccessMessage("");
-
-    if (hasMarkedToday()) {
-      setErrorMessage("🛑 Attendance already marked for today.");
-      return;
-    }
-
-    if (!navigator.geolocation) {
-      alert("Geolocation not supported");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-
-        try {
-          setLoading(true);
-          await axios.post(
-            `http://localhost:5000/api/attendance/${user._id}`,
-            {
-              status,
-              latitude,
-              longitude,
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
-          );
-
-          setSuccessMessage("✅ Today's attendance marked successfully!");
-          loadRecords();
-        } catch (err) {
-          alert("Failed to mark attendance");
-          console.error(err);
-        } finally {
-          setLoading(false);
-        }
-      },
-      (error) => {
-        alert("Location permission denied or unavailable");
-        console.error(error);
-      }
-    );
-  };
-
-  const calculatePercentage = () => {
-    if (records.length === 0) return 0;
-    const presentCount = records.filter((r) => r.status === "Present").length;
-    return ((presentCount / records.length) * 100).toFixed(2);
-  };
-
-  return (
-    <div>
-      <Navbar />
-      <div style={{ padding: "20px" }}>
-        <h2>Attendance</h2>
-
-        <label>Select Status: </label>
-        <select value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="Present">Full Day</option>
-          <option value="Half Day">Half Day</option>
-          <option value="Absent">Absent</option>
-        </select>
-        <button
-          onClick={markAttendance}
-          disabled={loading}
-          style={{ marginLeft: "10px" }}
-        >
-          {loading ? "Marking..." : "Mark Attendance"}
-        </button>
-
-        {successMessage && (
-          <p style={{ color: "green", marginTop: "10px" }}>{successMessage}</p>
-        )}
-        {errorMessage && (
-          <p style={{ color: "red", marginTop: "10px" }}>{errorMessage}</p>
-        )}
-
-        <h3>Your Attendance Records</h3>
-        <table border="1" cellPadding="5" style={{ width: "100%", marginTop: "10px" }}>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Status</th>
-              <th>Latitude</th>
-              <th>Longitude</th>
-              <th>Verified</th>
-            </tr>
-          </thead>
-          <tbody>
-            {records.map((rec) => (
-              <tr key={rec._id}>
-                <td>{new Date(rec.date).toLocaleDateString()}</td>
-                <td>{rec.status}</td>
-                <td>{rec.latitude || "N/A"}</td>
-                <td>{rec.longitude || "N/A"}</td>
-                <td>{rec.verified ? "✔️" : "❌"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <p>
-          <strong>Attendance %:</strong> {calculatePercentage()}%
-        </p>
-      </div>
-    </div>
-  );
-};
-
-export default AttendancePage;
-*/
-
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-
-const AttendancePage = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
+  // SAFE CHANGE: Handle empty or unauthenticated local storage sessions safely
+  const user = JSON.parse(localStorage.getItem("user")) || { _id: "", name: "" };
+  
   const [status, setStatus] = useState("Present");
   const [location, setLocation] = useState({ lat: null, lng: null });
   const [records, setRecords] = useState([]);
 
-  // Get today's location
+  // Get today's location coordinates
   const getLocation = () => {
     if (!navigator.geolocation) {
-      alert("Geolocation not supported");
+      alert("Geolocation is not supported by your browser");
       return;
     }
 
@@ -172,13 +25,28 @@ const AttendancePage = () => {
           lng: pos.coords.longitude,
         });
       },
-      () => alert("Location fetch failed")
+      () => alert("Location fetch failed. Please allow location permissions.")
     );
   };
 
-  // Submit attendance
+  // 3. FIX COMPILER WARNING: Wrapped inside useCallback to fix the dependency array issues
+  const fetchAttendance = useCallback(async () => {
+    if (!user._id) return;
+    try {
+      const res = await api.get(`/attendance/${user._id}`);
+      setRecords(res.data);
+    } catch (err) {
+      console.error("Error loading attendance records:", err);
+    }
+  }, [user._id]);
+
+  // Submit attendance records
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user._id) {
+      alert("User profile session data missing.");
+      return;
+    }
 
     try {
       const payload = {
@@ -187,7 +55,7 @@ const AttendancePage = () => {
         location,
       };
 
-      await axios.post("http://localhost:5000/api/attendance", payload);
+      await api.post("/attendance", payload);
       alert("Attendance marked successfully");
       fetchAttendance();
     } catch (err) {
@@ -196,67 +64,77 @@ const AttendancePage = () => {
     }
   };
 
-  // Load attendance records
-  const fetchAttendance = () => {
-    axios
-      .get(`http://localhost:5000/api/attendance/${user._id}`)
-      .then((res) => setRecords(res.data))
-      .catch(() => alert("Error loading attendance records"));
-  };
-
   useEffect(() => {
     fetchAttendance();
-  }, []);
+  }, [fetchAttendance]);
 
   return (
-    <div>
-      <h2>Attendance</h2>
-      <form onSubmit={handleSubmit}>
-        <label>Select Status: </label>
-        <select value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="Present">Present</option>
-          <option value="Absent">Absent</option>
-          <option value="Half Day">Half Day</option>
-        </select>
+    <div style={{ minHeight: "100vh", backgroundColor: "#ffe6f0" }}>
+      <Navbar />
+      
+      <div className="container" style={{ padding: "20px" }}>
+        <h2>Attendance Entry</h2>
+        <form onSubmit={handleSubmit}>
+          <label>Select Status: </label>
+          <select value={status} onChange={(e) => setStatus(e.target.value)} style={{ padding: "8px", marginBottom: "10px" }}>
+            <option value="Present">Present</option>
+            <option value="Absent">Absent</option>
+            <option value="Half Day">Half Day</option>
+          </select>
+          <br />
 
-        <button type="button" onClick={getLocation}>Get Location</button>
+          <button type="button" onClick={getLocation} style={{ marginRight: "10px", padding: "8px 12px" }}>
+            Get Location
+          </button>
 
-        {location.lat && (
-          <div>
-            <p>Latitude: {location.lat}</p>
-            <p>Longitude: {location.lng}</p>
-          </div>
-        )}
+          {location.lat && (
+            <div style={{ margin: "10px 0", padding: "10px", backgroundColor: "#fff0f5", borderRadius: "5px", border: "1px solid #ffb3c6" }}>
+              <p style={{ margin: 0 }}><strong>Latitude:</strong> {location.lat}</p>
+              <p style={{ margin: 0 }}><strong>Longitude:</strong> {location.lng}</p>
+            </div>
+          )}
 
-        <button type="submit">Mark Attendance</button>
-      </form>
+          <button type="submit" style={{ padding: "8px 15px", backgroundColor: "#800040", color: "#fff", border: "none", borderRadius: "4px" }}>
+            Mark Attendance
+          </button>
+        </form>
 
-      <hr />
+        <hr style={{ margin: "30px 0", border: "0", borderTop: "1px solid #ffb3c6" }} />
 
-      <h3>Your Attendance Records</h3>
-      <table border="1">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Status</th>
-            <th>Latitude</th>
-            <th>Longitude</th>
-          </tr>
-        </thead>
-        <tbody>
-          {records.map((r, idx) => (
-            <tr key={idx}>
-              <td>{r.date}</td>
-              <td>{r.status}</td>
-              <td>{r.location?.lat || "–"}</td>
-              <td>{r.location?.lng || "–"}</td>
+        <h3>Your Attendance Records</h3>
+        <table border="1" style={{ width: "100%", borderCollapse: "collapse", backgroundColor: "#fff0f5" }}>
+          <thead>
+            <tr style={{ backgroundColor: "#ffb3c6", color: "#800040" }}>
+              <th style={{ padding: "10px" }}>Date</th>
+              <th style={{ padding: "10px" }}>Status</th>
+              <th style={{ padding: "10px" }}>Latitude</th>
+              <th style={{ padding: "10px" }}>Longitude</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {records.length === 0 ? (
+              <tr>
+                <td colSpan="4" style={{ textAlign: "center", padding: "10px", color: "#888" }}>
+                  No attendance entries found.
+                </td>
+              </tr>
+            ) : (
+              records.map((r, idx) => (
+                <tr key={idx} style={{ textAlign: "center" }}>
+                  <td style={{ padding: "10px" }}>{r.date}</td>
+                  <td style={{ padding: "10px", color: r.status === "Present" ? "green" : "red", fontWeight: "bold" }}>
+                    {r.status}
+                  </td>
+                  <td style={{ padding: "10px" }}>{r.location?.lat || "–"}</td>
+                  <td style={{ padding: "10px" }}>{r.location?.lng || "–"}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
 
 export default AttendancePage;
-
